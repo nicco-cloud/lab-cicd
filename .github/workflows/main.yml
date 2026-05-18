@@ -1,0 +1,77 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Permessi necessari per scrivere pacchetti e fare il deploy su GitHub Pages
+permissions:
+  contents: write
+  packages: write
+  pages: write
+  id-token: write
+
+jobs:
+  # JOB A: Quality Check (CI)
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codice
+        uses: actions/checkout@v4
+
+      - name: HTMLHint Linting
+        uses: htmlhint/htmlhint-action@v2
+        with:
+          scan-pattern: '*.html'
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose index.html
+
+  # JOB B: Container Registry (Docker)
+  container-registry:
+    needs: quality-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codice
+        uses: actions/checkout@v4
+
+      - name: Login al GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & Push Immagine Docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}/static-site:latest
+
+  # JOB C: Deployment (CD)
+  deployment:
+    needs: container-registry
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout codice
+        uses: actions/checkout@v4
+
+      - name: Configura GitHub Pages
+        uses: actions/configure-pages@v4
+
+      - name: Carica l'Atefatto statico
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.' # Carica l'intera root dove ci sono index.html e style.css
+
+      - name: Rilascio su GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
