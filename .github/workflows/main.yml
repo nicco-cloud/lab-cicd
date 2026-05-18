@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 # Permessi necessari per scrivere pacchetti e fare il deploy su GitHub Pages
 permissions:
@@ -22,9 +22,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: HTMLHint Linting
-        uses: htmlhint/htmlhint-action@v2
+        uses: htmlhint/action-htmlhint@v2
         with:
-          scan-pattern: '*.html'
+          scan-pattern: "*.html"
 
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
@@ -70,7 +70,7 @@ jobs:
       - name: Carica l'Atefatto statico
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Carica l'intera root dove ci sono index.html e style.css
+          path: "." # Carica l'intera root dove ci sono index.html e style.css
 
       - name: Rilascio su GitHub Pages
         id: deployment
