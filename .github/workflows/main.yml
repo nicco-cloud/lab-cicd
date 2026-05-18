@@ -23,8 +23,6 @@ jobs:
 
       - name: HTMLHint Linting
         run: npx htmlhint *.html
-        with:
-          scan-pattern: "*.html"
 
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
